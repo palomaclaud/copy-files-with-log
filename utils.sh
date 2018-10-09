@@ -3,13 +3,13 @@
 ## Paloma Claudino <paloma.claud@gmail.com>
 
 function parameter_check() {
-	V_PARAMETERS=$1
-	V_QTY_PAR=$2
-	V_DESC_PAR=$3
-	V_FUNCTION_NAME=$4
+	PARAMETERS=$1
+	QTY_PAR=$2
+	DESC_PAR=$3
+	FUNCTION_NAME=$4
 	
-	if [ $V_PARAMETERS -ne $V_QTY_PAR ]; then
-		logger "ERROR: You must enter $V_QTY_PAR ($V_DESC_PAR) parameter(s) to execute the $V_FUNCTION_NAME function"
+	if [ $PARAMETERS -ne $QTY_PAR ]; then
+		logger "ERROR: You must enter $QTY_PAR ($DESC_PAR) parameter(s) to execute the $FUNCTION_NAME function"
 		STATUS=1
 		exit 126
 	fi	
@@ -23,6 +23,42 @@ function logger() {
 	LOG_DATE=`date '+%Y-%m-%d %H:%M:%S'`
 	
 	printf "\n[$LOG_DATE]\t$LOG_MSG" >> $LOG 2>&1
+}
+
+function get_files_properties() {
+	logger "Getting files properties"
+	
+	FILES=$( grep -si "^files=" files.properties | sed -n 's/[^=]*=//p' )
+	DESTINY_DIR=$( grep -si "^destiny_dir=" files.properties | sed -n 's/[^=]*=//p' )	
+	logger "\tFILES = ${FILES}"
+	logger "\tDESTINY_DIR = ${DESTINY_DIR}"
+	
+	if [ "$FILES" == "" ] || [ "$DESTINY_DIR" == "" ] ; then
+		logger "ERROR: Incorrectly configured properties file"
+		STATUS=1
+	else
+		logger "Properties get successfully"
+	fi	
+}
+
+function get_info() {
+	logger "Getting file info"
+	parameter_check $# 1 "1=FILE" "get_info"
+	
+	V_FILE=$1
+	logger "\tV_FILE = ${V_FILE}"
+	
+	V_FILE_DIR=$( grep -si "^$V_FILE.dir=" files.properties | sed -n 's/[^=]*=//p' )
+	V_FILE_NAME=$( grep -si "^$V_FILE.file=" files.properties | sed -n 's/[^=]*=//p' )
+	logger "\tV_FILE_DIR = $V_FILE_DIR"
+	logger "\tV_FILE_NAME = $V_FILE_NAME"
+	
+	if [ "$V_FILE_DIR" == "" ] || [ "$V_FILE_NAME" == "" ] ; then
+		logger "ERROR: Incorrectly configured properties file"
+		STATUS=1
+	else
+		logger "Information get successfully"
+	fi	
 }
 
 ## create a new directory
@@ -50,7 +86,7 @@ function check_directory() {
 	logger "\tDIR = ${DIR}"
 
 	if [ -d "$DIR" ] ; then
-		logger "Existing directory"
+		logger "Directory already exists"
 	else
 		logger "ALERT: Non-existent directory $DIR"
 		create_diretory $DIR

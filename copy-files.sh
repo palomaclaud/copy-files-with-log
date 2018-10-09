@@ -20,32 +20,37 @@ chmod 777 $LOG 2>> $LOG
 ## START COPY-FILES SHELL SCRIPT
 clear
 printf "\n\n### LOG SCRIPT $(basename $0)\n" >> $LOG 2>&1
-
 STATUS=0
 
-SOURCE_DIR=example_dir
-SOURCE_FILE=example_file.txt
-
-DESTINY_DIR=test_dest
-
-
-if [ $STATUS == 0 ]; then
-	check_file $SOURCE_DIR $SOURCE_FILE
-fi
+get_files_properties
 
 if [ $STATUS == 0 ]; then
 	check_directory $DESTINY_DIR
 fi
 
-echo $STATUS
+for V_FILE in ${FILES[@]}
+do
+	STATUS=0
+	
+	printf "\n" >> $LOG 2>&1
+	logger "------------------------------"
+	logger $V_FILE
+	logger "------------------------------"
+	
+	get_info $V_FILE
+	
+	if [ $STATUS == 0 ]; then
+		check_file $V_FILE_DIR $V_FILE_NAME
+	fi
 
-if [ $STATUS == 0 ]; then
-	copy_file $SOURCE_DIR"/"$SOURCE_FILE $DESTINY_DIR
-fi
+	if [ $STATUS == 0 ]; then
+		copy_file $V_FILE_DIR"/"$V_FILE_NAME $DESTINY_DIR
+	fi
 
-if [ $STATUS != 0 ]; then
-	echo "ERROR: The files could not be copied, check the log $LOG"
-fi
+	if [ $STATUS != 0 ]; then
+		echo "ERROR: The file $V_FILE could not be copied, check the log $LOG"
+	fi
+done
 
 exit 0
 # FINISHED
